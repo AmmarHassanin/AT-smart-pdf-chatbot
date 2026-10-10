@@ -175,6 +175,7 @@ if pdf is not None:
 
     user_question = st.text_input("💬 اكتب سؤالك هنا لـ AT:")
 if user_question:
+    if user_question:
         with st.spinner("🤖 AT يفكر ويولد الإجابة..."):
             llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
