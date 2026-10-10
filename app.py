@@ -353,8 +353,133 @@ st.markdown(
         bottom: 48px !important;
     }
 
+    [data-testid="stBottom"] > div {
+        display: flex !important;
+        justify-content: flex-end !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    [data-testid="stChatInput"] {
+        width: min(420px, 48%) !important;
+        max-width: 420px !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+
+    [data-testid="stChatInput"] textarea,
+    [data-testid="stChatInput"] [data-testid="stChatInputTextArea"] {
+        min-height: 42px !important;
+        max-height: 90px !important;
+        font-size: 0.95rem !important;
+    }
+
     [data-testid="stMain"] .block-container {
-        padding-bottom: 4.5rem;
+        padding-bottom: 5.5rem;
+        padding-left: 1.2rem;
+        padding-right: 1.2rem;
+    }
+
+    @media (max-width: 900px) {
+        .hero-title {
+            font-size: 3.4rem;
+            text-align: center;
+        }
+
+        .hero-kicker,
+        .hero-sub {
+            text-align: center;
+            max-width: none;
+        }
+
+        [data-testid="stBottom"] > div {
+            justify-content: center !important;
+        }
+
+        [data-testid="stChatInput"] {
+            width: min(560px, 92%) !important;
+            max-width: 92% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        [data-testid="stMain"] iframe {
+            height: 280px !important;
+        }
+
+        .api-key-quiet {
+            position: static;
+            display: block;
+            margin-top: 4px;
+            transform: none;
+            font-size: 8px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .hero-title {
+            font-size: 2.7rem;
+        }
+
+        .hero-kicker {
+            font-size: 1.05rem;
+        }
+
+        .hero-sub,
+        .upload-guide p,
+        .upload-guide ul {
+            font-size: 0.95rem;
+        }
+
+        .upload-guide {
+            padding: 14px 14px;
+        }
+
+        [data-testid="stFileUploader"] {
+            padding: 12px;
+        }
+
+        [data-testid="stFileUploader"] label p {
+            font-size: 1rem !important;
+        }
+
+        [data-testid="stBottom"] {
+            bottom: 56px !important;
+        }
+
+        [data-testid="stBottom"] > div {
+            justify-content: stretch !important;
+            padding-left: 0.55rem !important;
+            padding-right: 0.55rem !important;
+        }
+
+        [data-testid="stChatInput"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        [data-testid="stChatInput"] textarea,
+        [data-testid="stChatInput"] [data-testid="stChatInputTextArea"] {
+            min-height: 48px !important;
+            font-size: 1rem !important;
+        }
+
+        [data-testid="stMain"] iframe {
+            height: 400px !important;
+        }
+
+        [data-testid="stMain"] .block-container {
+            padding-bottom: 6.5rem;
+            padding-left: 0.7rem;
+            padding-right: 0.7rem;
+        }
+
+        .page-footer {
+            padding: 10px 10px 12px;
+            font-size: 0.95rem;
+        }
     }
 </style>
 <div class="page-footer">Ammar yasser<span class="api-key-quiet">GROQ_API_KEY</span></div>
@@ -419,11 +544,13 @@ ROBOT_HTML = """
 <html lang="ar">
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 <style>
   html, body {
     margin: 0;
-    height: 440px;
+    height: 100%;
+    min-height: 320px;
     overflow: hidden;
     background: transparent;
     color: #f3e8ff;
@@ -431,21 +558,23 @@ ROBOT_HTML = """
   }
   .stage {
     display: grid;
-    grid-template-columns: 1.15fr 0.95fr;
+    grid-template-columns: 1.05fr 1fr;
     align-items: center;
-    height: 440px;
+    height: 100%;
+    min-height: 320px;
     position: relative;
+    gap: 6px;
   }
   .viewer-wrap {
     position: relative;
-    height: 420px;
+    height: 300px;
   }
   .glow {
     position: absolute;
     left: 50%;
     top: 54%;
-    width: 210px;
-    height: 210px;
+    width: 150px;
+    height: 150px;
     transform: translate(-50%, -50%);
     background: radial-gradient(circle, rgba(168, 85, 247, 0.55), transparent 68%);
     filter: blur(6px);
@@ -453,7 +582,7 @@ ROBOT_HTML = """
   }
   model-viewer {
     width: 100%;
-    height: 420px;
+    height: 300px;
     background: transparent;
     --poster-color: transparent;
     position: relative;
@@ -478,11 +607,11 @@ ROBOT_HTML = """
     position: relative;
     background: rgba(24, 9, 43, 0.78);
     border: 1px solid rgba(192, 132, 252, 0.45);
-    border-radius: 18px;
-    padding: 16px 16px 12px;
-    line-height: 1.75;
-    font-size: 16px;
-    min-height: 148px;
+    border-radius: 16px;
+    padding: 12px 12px 10px;
+    line-height: 1.65;
+    font-size: 14px;
+    min-height: 110px;
     box-shadow: 0 0 28px rgba(168, 85, 247, 0.28);
     white-space: pre-line;
     direction: rtl;
@@ -520,10 +649,44 @@ ROBOT_HTML = """
   }
   button:hover { background: rgba(168, 85, 247, 0.25); }
   .fallback {
-    height: 420px;
+    height: 300px;
     display: grid;
     place-items: center;
     perspective: 700px;
+  }
+  @media (max-width: 640px) {
+    html, body, .stage {
+      min-height: 400px;
+      height: 400px;
+    }
+    .stage {
+      grid-template-columns: 1fr;
+      grid-template-rows: 190px auto;
+      align-content: start;
+      padding: 4px 6px 8px;
+    }
+    .viewer-wrap,
+    model-viewer,
+    .fallback {
+      height: 180px;
+    }
+    .glow {
+      width: 110px;
+      height: 110px;
+      top: 50%;
+    }
+    .bubble {
+      min-height: auto;
+      font-size: 13px;
+      padding: 10px;
+    }
+    .bubble:before {
+      left: 50%;
+      top: -11px;
+      transform: translateX(-50%);
+      border-width: 0 9px 12px 9px;
+      border-color: transparent transparent rgba(192, 132, 252, 0.7) transparent;
+    }
   }
   .bot {
     transform-style: preserve-3d;
@@ -579,7 +742,8 @@ ROBOT_HTML = """
       <model-viewer
         id="at-robot"
         src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/models/gltf/RobotExpressive/RobotExpressive.glb"
-        camera-orbit="18deg 78deg auto"
+        camera-orbit="18deg 78deg 115%"
+        field-of-view="32deg"
         auto-rotate
         rotation-per-second="18deg"
         camera-controls
@@ -708,7 +872,7 @@ robot_html = (
 
 hero_robot, hero_text = st.columns([1.25, 1], vertical_alignment="center", gap="small")
 with hero_robot:
-    st.iframe(robot_html, height=440)
+    st.iframe(robot_html, height=320)
 with hero_text:
     st.markdown(
         """
