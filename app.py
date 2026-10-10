@@ -279,6 +279,34 @@ st.markdown(
         margin-bottom: 4px;
     }
 
+    .upload-hint {
+        direction: rtl;
+        text-align: center;
+        width: fit-content;
+        max-width: 250px;
+        margin: 8px auto 0;
+        background: rgba(24, 9, 43, 0.85);
+        border: 1px solid rgba(232, 121, 249, 0.45);
+        border-radius: 12px;
+        padding: 8px 12px;
+        color: #faf5ff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+
+    .upload-hint p {
+        margin: 0;
+    }
+
+    @media (max-width: 640px) {
+        .upload-hint {
+            max-width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+
     [data-testid="stFileUploader"] {
         background: rgba(88, 28, 135, 0.28);
         border: 2px dashed #e879f9;
@@ -351,6 +379,7 @@ st.markdown(
 
     [data-testid="stBottom"] {
         bottom: 48px !important;
+        background: transparent !important;
     }
 
     [data-testid="stBottom"] > div {
@@ -358,11 +387,14 @@ st.markdown(
         justify-content: flex-end !important;
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
     [data-testid="stChatInput"] {
-        width: min(420px, 48%) !important;
-        max-width: 420px !important;
+        width: min(300px, 38%) !important;
+        max-width: 300px !important;
         margin-left: auto !important;
         margin-right: 0 !important;
     }
@@ -404,7 +436,7 @@ st.markdown(
         }
 
         [data-testid="stMain"] iframe {
-            height: 280px !important;
+            height: 220px !important;
         }
 
         .api-key-quiet {
@@ -467,7 +499,7 @@ st.markdown(
         }
 
         [data-testid="stMain"] iframe {
-            height: 400px !important;
+            height: 300px !important;
         }
 
         [data-testid="stMain"] .block-container {
@@ -518,12 +550,6 @@ with st.sidebar:
     )
     st.divider()
     model_label = st.selectbox("النموذج", list(MODELS))
-    effort = st.select_slider(
-        "عمق التفكير",
-        options=["low", "medium", "high"],
-        value="low",
-        help="low أسرع للأسئلة المباشرة. high أنسب للأسئلة التي تحتاج ربط أكثر من مقطع.",
-    )
     k = st.slider("عدد المقاطع المسترجعة", min_value=2, max_value=8, value=4)
     if st.button("مسح المحادثة", use_container_width=True):
         st.session_state.messages = []
@@ -550,7 +576,7 @@ ROBOT_HTML = """
   html, body {
     margin: 0;
     height: 100%;
-    min-height: 320px;
+    min-height: 240px;
     overflow: hidden;
     background: transparent;
     color: #f3e8ff;
@@ -558,23 +584,23 @@ ROBOT_HTML = """
   }
   .stage {
     display: grid;
-    grid-template-columns: 1.05fr 1fr;
+    grid-template-columns: 0.95fr 1.05fr;
     align-items: center;
     height: 100%;
-    min-height: 320px;
+    min-height: 240px;
     position: relative;
-    gap: 6px;
+    gap: 4px;
   }
   .viewer-wrap {
     position: relative;
-    height: 300px;
+    height: 220px;
   }
   .glow {
     position: absolute;
     left: 50%;
     top: 54%;
-    width: 150px;
-    height: 150px;
+    width: 110px;
+    height: 110px;
     transform: translate(-50%, -50%);
     background: radial-gradient(circle, rgba(168, 85, 247, 0.55), transparent 68%);
     filter: blur(6px);
@@ -582,7 +608,7 @@ ROBOT_HTML = """
   }
   model-viewer {
     width: 100%;
-    height: 300px;
+    height: 220px;
     background: transparent;
     --poster-color: transparent;
     position: relative;
@@ -608,10 +634,10 @@ ROBOT_HTML = """
     background: rgba(24, 9, 43, 0.78);
     border: 1px solid rgba(192, 132, 252, 0.45);
     border-radius: 16px;
-    padding: 12px 12px 10px;
-    line-height: 1.65;
-    font-size: 14px;
-    min-height: 110px;
+    padding: 10px 10px 8px;
+    line-height: 1.55;
+    font-size: 13px;
+    min-height: 90px;
     box-shadow: 0 0 28px rgba(168, 85, 247, 0.28);
     white-space: pre-line;
     direction: rtl;
@@ -649,36 +675,36 @@ ROBOT_HTML = """
   }
   button:hover { background: rgba(168, 85, 247, 0.25); }
   .fallback {
-    height: 300px;
+    height: 220px;
     display: grid;
     place-items: center;
     perspective: 700px;
   }
   @media (max-width: 640px) {
     html, body, .stage {
-      min-height: 400px;
-      height: 400px;
+      min-height: 300px;
+      height: 300px;
     }
     .stage {
       grid-template-columns: 1fr;
-      grid-template-rows: 190px auto;
+      grid-template-rows: 140px auto;
       align-content: start;
       padding: 4px 6px 8px;
     }
     .viewer-wrap,
     model-viewer,
     .fallback {
-      height: 180px;
+      height: 130px;
     }
     .glow {
-      width: 110px;
-      height: 110px;
+      width: 90px;
+      height: 90px;
       top: 50%;
     }
     .bubble {
       min-height: auto;
-      font-size: 13px;
-      padding: 10px;
+      font-size: 12px;
+      padding: 8px;
     }
     .bubble:before {
       left: 50%;
@@ -742,8 +768,8 @@ ROBOT_HTML = """
       <model-viewer
         id="at-robot"
         src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/models/gltf/RobotExpressive/RobotExpressive.glb"
-        camera-orbit="18deg 78deg 115%"
-        field-of-view="32deg"
+        camera-orbit="18deg 78deg 135%"
+        field-of-view="36deg"
         auto-rotate
         rotation-per-second="18deg"
         camera-controls
@@ -872,7 +898,7 @@ robot_html = (
 
 hero_robot, hero_text = st.columns([1.25, 1], vertical_alignment="center", gap="small")
 with hero_robot:
-    st.iframe(robot_html, height=320)
+    st.iframe(robot_html, height=240)
 with hero_text:
     st.markdown(
         """
@@ -910,16 +936,17 @@ with upload_col:
         accept_multiple_files=True,
         help="ارفع ملف PDF فيه نص قابل للتحديد.",
     )
+    if not pdfs:
+        st.markdown(
+            """
+            <div class="upload-hint">
+                <p>لسه مفيش ملف. اضغط Upload واختار PDF فيه نص.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 if not pdfs:
-    st.markdown(
-        """
-        <div class="upload-guide" style="margin-top: 8px;">
-            <p>لسه مفيش ملف مرفوع. اضغط Upload في المربع اللي على اليمين، واختار ملف PDF فيه نص.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
     st.stop()
 
 signature = file_signature(pdfs)
@@ -965,7 +992,7 @@ if question:
 
     with st.chat_message("assistant", avatar="🤖"):
         try:
-            llm = load_llm(MODELS[model_label], effort)
+            llm = load_llm(MODELS[model_label], "high")
             token_stream, docs = answer_question(
                 question,
                 store,
