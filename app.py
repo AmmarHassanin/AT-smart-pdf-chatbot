@@ -242,11 +242,63 @@ st.markdown(
         border: none !important;
     }
 
+    .upload-guide {
+        direction: rtl;
+        text-align: right;
+        background: rgba(24, 9, 43, 0.85);
+        border: 1px solid rgba(232, 121, 249, 0.55);
+        border-radius: 18px;
+        padding: 18px 20px;
+        color: #faf5ff;
+        line-height: 1.8;
+        margin-bottom: 10px;
+    }
+
+    .upload-guide h3 {
+        margin: 0 0 8px;
+        color: #f5d0fe;
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+
+    .upload-guide p {
+        margin: 0 0 8px;
+        color: #f3e8ff;
+        font-size: 1.05rem;
+        font-weight: 600;
+    }
+
+    .upload-guide ul {
+        margin: 0;
+        padding-right: 18px;
+        color: #ede9fe;
+        font-size: 0.98rem;
+    }
+
+    .upload-guide li {
+        margin-bottom: 4px;
+    }
+
     [data-testid="stFileUploader"] {
-        background: rgba(88, 28, 135, 0.15);
-        border: 2px dashed #a855f7;
+        background: rgba(88, 28, 135, 0.28);
+        border: 2px dashed #e879f9;
         border-radius: 20px;
         padding: 18px;
+    }
+
+    [data-testid="stFileUploader"] label,
+    [data-testid="stFileUploader"] p,
+    [data-testid="stFileUploader"] span,
+    [data-testid="stFileUploader"] small,
+    [data-testid="stFileUploaderDropzone"] *,
+    [data-testid="stFileUploaderDropzoneInstructions"] * {
+        color: #faf5ff !important;
+        opacity: 1 !important;
+    }
+
+    [data-testid="stFileUploader"] label p {
+        font-size: 1.15rem !important;
+        font-weight: 800 !important;
     }
 
     [data-testid="stChatMessage"] {
@@ -671,14 +723,39 @@ if not os.getenv("GROQ_API_KEY"):
     st.error("أضف GROQ_API_KEY في ملف .env ثم أعد تشغيل التطبيق.")
     st.stop()
 
-pdfs = st.file_uploader(
-    "ارفع ملف PDF أو أكثر",
-    type=["pdf"],
-    accept_multiple_files=True,
-)
+guide_col, upload_col = st.columns([1.05, 1.2], gap="medium", vertical_alignment="center")
+with guide_col:
+    st.markdown(
+        """
+        <div class="upload-guide">
+            <h3>هنا ترفع ملف الـ PDF</h3>
+            <p>اختار ملف PDF من جهازك، وبعدين اكتب سؤالك تحت.</p>
+            <ul>
+                <li>الملف لازم يكون فيه نص تقدر تحدده، مش صورة بس.</li>
+                <li>تقدر ترفع ملف واحد أو أكتر.</li>
+                <li>بعد الرفع هتقدر تسأل AT عن محتوى الملف.</li>
+            </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with upload_col:
+    pdfs = st.file_uploader(
+        "اضغط Upload واختار ملف PDF",
+        type=["pdf"],
+        accept_multiple_files=True,
+        help="ارفع ملف PDF فيه نص قابل للتحديد.",
+    )
 
 if not pdfs:
-    st.info("ارفع ملفًا فيه نص قابل للتحديد. الملفات الممسوحة ضوئيًا بدون طبقة نص لن تُقرأ.")
+    st.markdown(
+        """
+        <div class="upload-guide" style="margin-top: 8px;">
+            <p>لسه مفيش ملف مرفوع. اضغط Upload في المربع اللي على اليمين، واختار ملف PDF فيه نص.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.stop()
 
 signature = file_signature(pdfs)
