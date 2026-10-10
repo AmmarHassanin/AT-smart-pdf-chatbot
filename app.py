@@ -179,30 +179,22 @@ if pdf is not None:
         with st.spinner("🤖 AT يفكر ويولد الإجابة..."):
             llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
-            prompt = ChatPromptTemplate.from_template("""
-            أنت المساعد الذكي AT. أجب على السؤال بناءً على السياق الموفر فقط. إذا لم تجد الإجابة، قل "المعلومة غير متوفرة في الملف".
+        # 1. إعداد الـ Prompt بشكل آمن
+        system_prompt = (
+            "أنت المساعد الذكي AT. أجب على السؤال بناءً على السياق الموفر فقط. "
+            "إذا لم تجد الإجابة، قل 'المعلومة غير متوفرة في الملف'.\n\n"
+            "السياق:\n{context}"
+        )
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            ("human", "{input}"),
+        ])
 
-            السياق:
-            {context}
+        # 2. إنشاء الـ Chains
+        question_answer_chain = create_stuff_documents_chain(llm, prompt)
+        retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+        retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
 
-            السؤال: {input}
-            """)
-
-            document_chain = create_stuff_documents_chain(llm, prompt)
-            retriever = vector_store.as_retriever()
-            retrieval_chain = create_retrieval_chain(retriever, document_chain)
-
-            response = retrieval_chain.invoke({"input": user_question})
-
-            st.markdown("### 🤖 إجابة AT:")
-            st.info(response["answer"])
-
-# 7. الفوتر
-st.markdown("""
-<div class="footer-container">
-    <div>🚀 Developed with <span style="color: #e879f9;">💜</span> by <span class="developer-name">Ammar Yasser</span></div>
-    <div style="font-size: 13px; color: #c084fc; margin-top: 6px;">
-        AT AI Assistant | Powered by Groq & LangChain
-    </div>
-</div>
-""", unsafe_allow_html=True)
+        # 3. استدعاء الإجابة
+        response = retrieval_chain.invoke({"input": user_question})
+        st.write(response["answer"])
