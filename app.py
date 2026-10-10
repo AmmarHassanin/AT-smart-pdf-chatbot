@@ -177,14 +177,14 @@ if pdf is not None:
 
     if user_question:
         with st.spinner("🤖 AT يفكر ويولد الإجابة..."):
-            llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
-            
+            llm = ChatGroq(model="llama3-70b-8192", temperature=0)
+
             prompt = ChatPromptTemplate.from_template("""
             أنت المساعد الذكي AT. أجب على السؤال بناءً على السياق الموفر فقط. إذا لم تجد الإجابة، قل "المعلومة غير متوفرة في الملف".
-            
+
             السياق:
             {context}
-            
+
             السؤال: {input}
             """)
 
@@ -193,7 +193,7 @@ if pdf is not None:
             retrieval_chain = create_retrieval_chain(retriever, document_chain)
 
             response = retrieval_chain.invoke({"input": user_question})
-            
+
             st.markdown("### 🤖 إجابة AT:")
             st.info(response["answer"])
 
