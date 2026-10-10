@@ -176,13 +176,13 @@ if pdf is not None:
     user_question = st.text_input("💬 اكتب سؤالك هنا لـ AT:")
 
     if user_question:
-        with st.spinner("🤖 AT يفكر ويولد الإجابة..."):
-            llm = ChatGroq(model="llama3-70b-8192", temperature=0)
+    with st.spinner("🤖 AT يفكر ويولد الإجابة..."):
+        llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
-        # 1. إعداد الـ Prompt بشكل آمن
+        # إعداد الـ Prompt بشكل معزول وآمن تماماً
         system_prompt = (
             "أنت المساعد الذكي AT. أجب على السؤال بناءً على السياق الموفر فقط. "
-            "إذا لم تجد الإجابة، قل 'المعلومة غير متوفرة في الملف'.\n\n"
+            "إذا لم تجد الإجابة في النص، قل بكل بساطة: المعلومة غير متوفرة في الملف.\n\n"
             "السياق:\n{context}"
         )
         prompt = ChatPromptTemplate.from_messages([
@@ -190,11 +190,11 @@ if pdf is not None:
             ("human", "{input}"),
         ])
 
-        # 2. إنشاء الـ Chains
+        # بناء السلسلة والاستعلام
         question_answer_chain = create_stuff_documents_chain(llm, prompt)
         retriever = vector_store.as_retriever(search_kwargs={"k": 3})
         retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
 
-        # 3. استدعاء الإجابة
+        # الحصول على النتيجة
         response = retrieval_chain.invoke({"input": user_question})
         st.write(response["answer"])
