@@ -174,27 +174,23 @@ if pdf is not None:
     st.success("✅ تم تحليل الملف بنجاح! يمكنك الآن طرح أي سؤال على الروبوت AT.")
 
     user_question = st.text_input("💬 اكتب سؤالك هنا لـ AT:")
+if user_question:
+        with st.spinner("🤖 AT يفكر ويولد الإجابة..."):
+            llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
-    if user_question:
-    with st.spinner("🤖 AT يفكر ويولد الإجابة..."):
-        llm = ChatGroq(model="llama3-70b-8192", temperature=0)
+            system_prompt = (
+                "أنت المساعد الذكي AT. أجب على السؤال بناءً على السياق الموفر فقط. "
+                "إذا لم تجد الإجابة في النص، قل بكل بساطة: المعلومة غير متوفرة في الملف.\n\n"
+                "السياق:\n{context}"
+            )
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", system_prompt),
+                ("human", "{input}"),
+            ])
 
-        # إعداد الـ Prompt بشكل معزول وآمن تماماً
-        system_prompt = (
-            "أنت المساعد الذكي AT. أجب على السؤال بناءً على السياق الموفر فقط. "
-            "إذا لم تجد الإجابة في النص، قل بكل بساطة: المعلومة غير متوفرة في الملف.\n\n"
-            "السياق:\n{context}"
-        )
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", "{input}"),
-        ])
+            question_answer_chain = create_stuff_documents_chain(llm, prompt)
+            retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+            retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
 
-        # بناء السلسلة والاستعلام
-        question_answer_chain = create_stuff_documents_chain(llm, prompt)
-        retriever = vector_store.as_retriever(search_kwargs={"k": 3})
-        retrieval_chain = create_retrieval_chain(retriever, question_answer_chain)
-
-        # الحصول على النتيجة
-        response = retrieval_chain.invoke({"input": user_question})
-        st.write(response["answer"])
+            response = retrieval_chain.invoke({"input": user_question})
+            st.write(response["answer"])
