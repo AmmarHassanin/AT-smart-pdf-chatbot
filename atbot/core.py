@@ -11,6 +11,7 @@ from langchain_groq import ChatGroq
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
 
+from atbot.chats import active_chat, maybe_set_title_from_question, touch_chat
 from atbot.constants import MODELS
 
 ANSWER_PROMPT = ChatPromptTemplate.from_messages([(
@@ -88,46 +89,66 @@ def file_digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def rebuild_index() -> None:
-    st.session_state.index_error = None
-    if not st.session_state.files:
-        st.session_state.store = None
-        st.session_state.pages = 0
-        st.session_state.index_warnings = []
-        return
-    try:
-        with st.spinner("بقرأ الملفات وبجهّز الفهرس… (أول مرة ممكن تاخد دقيقة)"):
-            store, pages, problems = build_index(st.session_state.files)
-    except Exception as error:
-        st.session_state.store = None
-        st.session_state.pages = 0
-        st.session_state.index_error = str(error)
-        st.error(f"تعذّر تجهيز الملفات: {error}")
+def rebuild_index(*, quiet: bool = False) -> None:
+    from atbot.persistence import persist_user_state
+
+    chat = active_chat()
+    chat["index_error"] = None
+    if not chat["files"]:
+        chat["store"] = None
+        chat["pages"] = 0
+        chat["index_warnings"] = []
+        touch_chat(chat)
+        persist_user_state()
         return
 
-    st.session_state.store = store
-    st.session_state.pages = pages
-    st.session_state.index_warnings = problems
+    def _build():
+        return build_index(chat["files"])
+
+    try:
+        if quiet:
+            store, pages, problems = _build()
+        else:
+            with st.spinner("بقرأ الملفات وبجهّز الفهرس… (أول مرة ممكن تاخد دقيقة)"):
+                store, pages, problems = _build()
+    except Exception as error:
+        chat["store"] = None
+        chat["pages"] = 0
+        chat["index_error"] = str(error)
+        touch_chat(chat)
+        persist_user_state()
+        if not quiet:
+            st.error(f"تعذّر تجهيز الملفات: {error}")
+        return
+
+    chat["store"] = store
+    chat["pages"] = pages
+    chat["index_warnings"] = problems
+    touch_chat(chat)
+    persist_user_state()
+    if quiet:
+        return
     for problem in problems:
         st.warning(problem)
     if store is None:
-        st.session_state.index_error = "لم يُستخرج نص من الملفات. تأكّد أن الـ PDF فيه نص وليس صورًا فقط."
-        st.error(st.session_state.index_error)
+        chat["index_error"] = "لم يُستخرج نص من الملفات. تأكّد أن الـ PDF فيه نص وليس صورًا فقط."
+        st.error(chat["index_error"])
     else:
-        st.success(f"تم — {len(st.session_state.files)} ملف، {pages} صفحة. اسأل عن المحتوى الآن.")
+        st.success(f"تم — {len(chat['files'])} ملف، {pages} صفحة. اسأل عن المحتوى الآن.")
 
 
 def ingest_uploads(uploaded) -> bool:
     if not uploaded:
         return False
 
+    chat = active_chat()
     changed = False
     for file in uploaded:
         data = file.getvalue()
         digest = file_digest(data)
-        if st.session_state.file_digests.get(file.name) != digest:
-            st.session_state.files[file.name] = data
-            st.session_state.file_digests[file.name] = digest
+        if chat["file_digests"].get(file.name) != digest:
+            chat["files"][file.name] = data
+            chat["file_digests"][file.name] = digest
             changed = True
 
     if not changed:
@@ -138,13 +159,17 @@ def ingest_uploads(uploaded) -> bool:
 
 
 def remove_file(name: str) -> None:
-    st.session_state.files.pop(name, None)
-    st.session_state.file_digests.pop(name, None)
+    chat = active_chat()
+    chat["files"].pop(name, None)
+    chat["file_digests"].pop(name, None)
     rebuild_index()
 
 
 def clear_all_files_and_chat() -> None:
-    st.session_state.update(
+    from atbot.persistence import persist_user_state
+
+    chat = active_chat()
+    chat.update(
         files={},
         file_digests={},
         store=None,
@@ -152,17 +177,22 @@ def clear_all_files_and_chat() -> None:
         messages=[],
         index_error=None,
         index_warnings=[],
+        pending=None,
     )
+    touch_chat(chat)
+    persist_user_state()
 
 
 def new_chat() -> None:
-    st.session_state.messages = []
-    st.session_state.pop("pending", None)
+    from atbot.chats import create_new_chat
+
+    create_new_chat()
 
 
 def recent_history(limit: int = 6) -> str:
+    chat = active_chat()
     lines = []
-    for message in st.session_state.messages[-limit:]:
+    for message in chat["messages"][-limit:]:
         speaker = "User" if message["role"] == "user" else "AT"
         lines.append(f"{speaker}: {message['content']}")
     return "\n".join(lines)
@@ -181,22 +211,25 @@ def render_sources(sources) -> None:
 
 
 def answer(question: str, model_label: str, k: int) -> None:
+    chat = active_chat()
+    maybe_set_title_from_question(question)
+    touch_chat(chat)
     history = recent_history()
-    st.session_state.messages.append({"role": "user", "content": question})
+    chat["messages"].append({"role": "user", "content": question})
     with st.chat_message("user"):
         st.markdown(question)
 
     reply = ""
     sources = []
     with st.chat_message("assistant"):
-        if st.session_state.store is None:
+        if chat["store"] is None:
             reply = (
                 "Upload a PDF first using the upload area above or the attachment button in the chat input, "
                 "then ask your question."
             )
             st.markdown(reply)
         else:
-            docs = st.session_state.store.as_retriever(search_kwargs={"k": k}).invoke(question)
+            docs = chat["store"].as_retriever(search_kwargs={"k": k}).invoke(question)
             composed = f"Previous conversation:\n{history}\n\nCurrent question: {question}" if history else question
             chain = create_stuff_documents_chain(
                 load_llm(MODELS[model_label]), ANSWER_PROMPT, document_prompt=DOCUMENT_PROMPT
@@ -215,7 +248,8 @@ def answer(question: str, model_label: str, k: int) -> None:
             except Exception as error:
                 reply = f"حصلت مشكلة أثناء الرد: {error}"
                 st.error(reply)
-                st.session_state.messages.append({"role": "assistant", "content": reply, "sources": []})
+                chat["messages"].append({"role": "assistant", "content": reply, "sources": []})
+                touch_chat(chat)
                 return
             reply = THINK_PATTERN.sub("", raw or "").strip() or "مفيش رد وصل، جرّب تاني."
             sources = [
@@ -228,17 +262,23 @@ def answer(question: str, model_label: str, k: int) -> None:
             ]
             render_sources(sources)
 
-    st.session_state.messages.append({"role": "assistant", "content": reply, "sources": sources})
+    chat["messages"].append({"role": "assistant", "content": reply, "sources": sources})
+    touch_chat(chat)
+    from atbot.persistence import persist_user_state
+
+    persist_user_state()
 
 
 def retry_last_turn() -> None:
-    if len(st.session_state.messages) < 2:
+    chat = active_chat()
+    if len(chat["messages"]) < 2:
         return
-    if st.session_state.messages[-1]["role"] != "assistant":
+    if chat["messages"][-1]["role"] != "assistant":
         return
-    user_msg = st.session_state.messages[-2]
+    user_msg = chat["messages"][-2]
     if user_msg["role"] != "user":
         return
     question = user_msg["content"]
-    st.session_state.messages = st.session_state.messages[:-2]
-    st.session_state.pending = question
+    chat["messages"] = chat["messages"][:-2]
+    chat["pending"] = question
+    touch_chat(chat)

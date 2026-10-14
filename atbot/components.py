@@ -5,6 +5,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from atbot.assets import robot_hero_html
+from atbot.chats import active_chat, active_chat_id, delete_chat, ensure_chats, list_chats_newest_first, switch_chat
 from atbot.constants import MAX_UPLOAD_MB, MODELS, SUGGESTIONS
 from atbot.core import (
     answer,
@@ -20,6 +21,7 @@ from atbot.core import (
 def init_session(defaults: dict) -> None:
     for key, default in defaults.items():
         st.session_state.setdefault(key, default)
+    ensure_chats()
 
 
 def fmt_size(num_bytes: int) -> str:
@@ -94,6 +96,27 @@ def render_sidebar() -> tuple[str, int]:
             new_chat()
             st.rerun()
 
+        st.markdown('<div class="sidebar-section-label">المحادثات</div>', unsafe_allow_html=True)
+        current_id = active_chat_id()
+        for chat in list_chats_newest_first():
+            cid = chat["id"]
+            title = html.escape(chat.get("title") or "محادثة جديدة")
+            cols = st.columns([5, 1])
+            with cols[0]:
+                if st.button(
+                    title,
+                    key=f"open_chat_{cid}",
+                    use_container_width=True,
+                    type="primary" if cid == current_id else "secondary",
+                ):
+                    if cid != current_id:
+                        switch_chat(cid)
+                        st.rerun()
+            with cols[1]:
+                if st.button("×", key=f"del_chat_{cid}", help="حذف المحادثة"):
+                    delete_chat(cid)
+                    st.rerun()
+
         st.markdown('<div class="sidebar-footer">', unsafe_allow_html=True)
         with st.expander("Settings"):
             model_label = st.selectbox("النموذج", list(MODELS))
@@ -122,17 +145,19 @@ def _upload_zone_html() -> str:
 
 
 def render_file_list() -> None:
-    if not st.session_state.files:
+    chat = active_chat()
+    cid = active_chat_id()
+    if not chat["files"]:
         return
-    for name in list(st.session_state.files.keys()):
-        data = st.session_state.files[name]
+    for name in list(chat["files"].keys()):
+        data = chat["files"][name]
         safe_name = html.escape(name)
         st.markdown(
             f'<div class="file-chip"><div><div class="file-chip__name">{safe_name}</div>'
             f'<div class="file-chip__meta">{fmt_size(len(data))}</div></div></div>',
             unsafe_allow_html=True,
         )
-        if st.button("Remove", key=f"remove_{name}", use_container_width=True):
+        if st.button("Remove", key=f"remove_{cid}_{name}", use_container_width=True):
             remove_file(name)
             st.rerun()
     if st.button("Clear chat & all files", use_container_width=True):
@@ -149,7 +174,7 @@ def render_welcome_hero() -> None:
         st.warning("Robot image missing at assets/at-robot.jpg")
     st.markdown(
         """
-<h1 class="welcome-title">Your AI Assistant</h1>
+<h1 class="welcome-title">AT pdf</h1>
 <p class="welcome-subtitle">Upload a document, ask questions, and discover insights instantly.</p>
 """,
         unsafe_allow_html=True,
@@ -158,9 +183,11 @@ def render_welcome_hero() -> None:
 
 
 def render_prompt_cards() -> None:
-    if st.session_state.messages:
+    chat = active_chat()
+    cid = active_chat_id()
+    if chat["messages"]:
         return
-    if st.session_state.store is None:
+    if chat["store"] is None:
         st.markdown(
             '<p class="hub-hint">Upload a PDF above to enable suggested prompts.</p>',
             unsafe_allow_html=True,
@@ -170,13 +197,15 @@ def render_prompt_cards() -> None:
     cols = st.columns(2)
     for idx, suggestion in enumerate(SUGGESTIONS):
         with cols[idx % 2]:
-            if st.button(suggestion, key=f"sug_{idx}", use_container_width=True):
-                st.session_state.pending = suggestion
+            if st.button(suggestion, key=f"sug_{cid}_{idx}", use_container_width=True):
+                chat["pending"] = suggestion
                 st.rerun()
 
 
 def render_pdf_chat(model_label: str, k: int) -> None:
-    has_chat = bool(st.session_state.messages)
+    chat = active_chat()
+    cid = active_chat_id()
+    has_chat = bool(chat["messages"])
 
     if not has_chat:
         render_welcome_hero()
@@ -193,21 +222,21 @@ def render_pdf_chat(model_label: str, k: int) -> None:
         type=["pdf"],
         accept_multiple_files=True,
         label_visibility="collapsed",
-        key="main_pdf_uploader",
+        key=f"main_pdf_uploader_{cid}",
     )
     if uploads:
         ingest_uploads(uploads)
 
     render_file_list()
 
-    if st.session_state.get("index_error") and not st.session_state.store:
-        st.error(st.session_state.index_error)
+    if chat.get("index_error") and not chat["store"]:
+        st.error(chat["index_error"])
 
     render_prompt_cards()
 
-    question = st.session_state.pop("pending", None)
+    question = chat.pop("pending", None)
 
-    for idx, message in enumerate(st.session_state.messages):
+    for idx, message in enumerate(chat["messages"]):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             if message["role"] == "assistant":
@@ -217,10 +246,10 @@ def render_pdf_chat(model_label: str, k: int) -> None:
                 st.markdown('<div class="msg-actions">', unsafe_allow_html=True)
                 ac1, ac2, _ = st.columns([1, 1, 4])
                 with ac1:
-                    copy_to_clipboard_button(message["content"], f"copy_{idx}")
+                    copy_to_clipboard_button(message["content"], f"copy_{cid}_{idx}")
                 with ac2:
-                    if idx == len(st.session_state.messages) - 1:
-                        if st.button("Retry", key=f"retry_{idx}"):
+                    if idx == len(chat["messages"]) - 1:
+                        if st.button("Retry", key=f"retry_{cid}_{idx}"):
                             retry_last_turn()
                             st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -232,7 +261,7 @@ def render_pdf_chat(model_label: str, k: int) -> None:
         "Ask anything about your documents…",
         accept_file="multiple",
         file_type=["pdf"],
-        key="pdf_chat_input",
+        key=f"pdf_chat_input_{cid}",
     )
     if submission is not None:
         chat_files = getattr(submission, "files", None) or []

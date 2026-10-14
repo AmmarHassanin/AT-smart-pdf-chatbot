@@ -17,11 +17,6 @@ SUGGESTIONS = [
 ]
 
 SESSION_DEFAULTS = {
-    "messages": [],
-    "files": {},
-    "file_digests": {},
-    "store": None,
-    "pages": 0,
-    "index_error": None,
-    "index_warnings": [],
+    "chats": {},
+    "active_chat_id": None,
 }
