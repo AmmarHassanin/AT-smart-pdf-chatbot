@@ -12,7 +12,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
 
 from atbot.chats import active_chat, maybe_set_title_from_question, touch_chat
-from atbot.constants import MODELS
+from atbot.constants import MAX_UPLOAD_MB, MODELS
+from atbot.i18n import t
 
 ANSWER_PROMPT = ChatPromptTemplate.from_messages([(
     "human",
@@ -52,9 +53,9 @@ def read_pdf(name: str, data: bytes):
     try:
         reader = PdfReader(BytesIO(data))
         if reader.is_encrypted and reader.decrypt("") == 0:
-            return [], 0, f"{name} محمي بكلمة سر ولم يُفتح."
+            return [], 0, t("encrypted_pdf", name=name)
     except Exception:
-        return [], 0, f"تعذّر فتح {name}. لو محمي بكلمة سر ارفع نسخة غير مشفرة."
+        return [], 0, t("corrupt_pdf", name=name)
 
     docs = []
     for number, page in enumerate(reader.pages, start=1):
@@ -65,7 +66,7 @@ def read_pdf(name: str, data: bytes):
         if text:
             docs.append(Document(page_content=text, metadata={"source": name, "page": number}))
     if not docs:
-        return [], len(reader.pages), f"{name} مفيهوش نص قابل للقراءة (غالبًا صور فقط)."
+        return [], len(reader.pages), t("no_text_pdf", name=name)
     return docs, len(reader.pages), None
 
 
@@ -143,8 +144,12 @@ def ingest_uploads(uploaded) -> bool:
 
     chat = active_chat()
     changed = False
+    max_bytes = MAX_UPLOAD_MB * 1024 * 1024
     for file in uploaded:
         data = file.getvalue()
+        if len(data) > max_bytes:
+            st.error(t("file_too_large", name=file.name, mb=MAX_UPLOAD_MB))
+            continue
         digest = file_digest(data)
         if chat["file_digests"].get(file.name) != digest:
             chat["files"][file.name] = data
@@ -201,16 +206,19 @@ def recent_history(limit: int = 6) -> str:
 def render_sources(sources) -> None:
     if not sources:
         return
-    with st.expander(f"المصادر · {len(sources)}"):
+    with st.expander(f"{t('sources')} · {len(sources)}"):
         for item in sources:
             st.markdown(
-                f'<div class="source"><b>{item["source"]}</b> · صفحة {item["page"]}'
+                f'<div class="source"><b>{item["source"]}</b> · {t("page_label")} {item["page"]}'
                 f'<span>{item["snippet"]}</span></div>',
                 unsafe_allow_html=True,
             )
 
 
 def answer(question: str, model_label: str, k: int) -> None:
+    if st.session_state.get("answer_in_progress"):
+        return
+    st.session_state.answer_in_progress = True
     chat = active_chat()
     maybe_set_title_from_question(question)
     touch_chat(chat)
@@ -223,10 +231,7 @@ def answer(question: str, model_label: str, k: int) -> None:
     sources = []
     with st.chat_message("assistant"):
         if chat["store"] is None:
-            reply = (
-                "Upload a PDF first using the upload area above or the attachment button in the chat input, "
-                "then ask your question."
-            )
+            reply = t("no_index")
             st.markdown(reply)
         else:
             docs = chat["store"].as_retriever(search_kwargs={"k": k}).invoke(question)
@@ -234,6 +239,7 @@ def answer(question: str, model_label: str, k: int) -> None:
             chain = create_stuff_documents_chain(
                 load_llm(MODELS[model_label]), ANSWER_PROMPT, document_prompt=DOCUMENT_PROMPT
             )
+            st.caption(t("typing"))
             try:
                 def stream_tokens():
                     for chunk in chain.stream({"input": composed, "context": docs}):
@@ -246,12 +252,16 @@ def answer(question: str, model_label: str, k: int) -> None:
 
                 raw = st.write_stream(stream_tokens)
             except Exception as error:
-                reply = f"حصلت مشكلة أثناء الرد: {error}"
+                reply = t("error_answer", error=error)
                 st.error(reply)
                 chat["messages"].append({"role": "assistant", "content": reply, "sources": []})
                 touch_chat(chat)
+                from atbot.persistence import persist_user_state
+
+                persist_user_state()
+                st.session_state.answer_in_progress = False
                 return
-            reply = THINK_PATTERN.sub("", raw or "").strip() or "مفيش رد وصل، جرّب تاني."
+            reply = THINK_PATTERN.sub("", raw or "").strip() or t("empty_answer")
             sources = [
                 {
                     "source": d.metadata.get("source", "PDF"),
@@ -267,6 +277,7 @@ def answer(question: str, model_label: str, k: int) -> None:
     from atbot.persistence import persist_user_state
 
     persist_user_state()
+    st.session_state.answer_in_progress = False
 
 
 def retry_last_turn() -> None:

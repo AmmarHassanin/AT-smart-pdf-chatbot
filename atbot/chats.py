@@ -22,6 +22,26 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def format_chat_timestamp(iso: str | None) -> str:
+    if not iso:
+        return ""
+    try:
+        dt = datetime.fromisoformat(iso)
+    except ValueError:
+        return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    local = dt.astimezone()
+    now = datetime.now(local.tzinfo)
+    time_part = local.strftime("%I:%M %p").lstrip("0")
+    if local.date() == now.date():
+        return f"Today, {time_part}"
+    yesterday = now.date().toordinal() - 1
+    if local.date().toordinal() == yesterday:
+        return f"Yesterday, {time_part}"
+    return f"{local.strftime('%b')} {local.day}, {local.year}"
+
+
 def _empty_chat(chat_id: str | None = None, title: str = "محادثة جديدة") -> dict:
     return {
         "id": chat_id or uuid.uuid4().hex[:10],
@@ -207,3 +227,32 @@ def maybe_set_title_from_question(question: str) -> None:
     chat = active_chat()
     if chat["title"] == "محادثة جديدة" or not chat["title"].strip():
         chat["title"] = _title_from_text(question)
+
+
+def rename_chat(chat_id: str, new_title: str) -> None:
+    from atbot.persistence import persist_user_state
+
+    ensure_chats()
+    title = " ".join((new_title or "").strip().split())
+    if not title or chat_id not in st.session_state.chats:
+        return
+    st.session_state.chats[chat_id]["title"] = _title_from_text(title, max_len=48)
+    touch_chat(st.session_state.chats[chat_id])
+    persist_user_state()
+
+
+def filter_chats(chats: list[dict], query: str) -> list[dict]:
+    q = " ".join((query or "").strip().lower().split())
+    if not q:
+        return chats
+    out = []
+    for chat in chats:
+        title = (chat.get("title") or "").lower()
+        if q in title:
+            out.append(chat)
+            continue
+        for msg in chat.get("messages") or []:
+            if q in (msg.get("content") or "").lower():
+                out.append(chat)
+                break
+    return out

@@ -9,3 +9,4 @@ langchain-text-splitters
 sentence-transformers
 faiss-cpu
 pypdf
+deep-translator>=1.11.4

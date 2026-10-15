@@ -97,7 +97,40 @@ def delete_chat_storage(user_id: str, chat_id: str) -> None:
         shutil.rmtree(chat_dir, ignore_errors=True)
 
 
+def _local_prefs_path() -> Path:
+    return Path(__file__).resolve().parent.parent / "data" / "local_preferences.json"
+
+
+def _save_local_preferences() -> None:
+    if is_production():
+        return
+    path = _local_prefs_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "ui_lang": st.session_state.get("ui_lang"),
+        "ui_theme": st.session_state.get("ui_theme"),
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _load_local_preferences() -> None:
+    if is_production():
+        return
+    path = _local_prefs_path()
+    if not path.is_file():
+        return
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return
+    if payload.get("ui_lang"):
+        st.session_state.ui_lang = payload["ui_lang"]
+    if payload.get("ui_theme"):
+        st.session_state.ui_theme = payload["ui_theme"]
+
+
 def persist_user_state() -> None:
+    _save_local_preferences()
     if not is_production():
         return
     user_id = resolve_user_id()
@@ -112,6 +145,10 @@ def persist_user_state() -> None:
     payload = {
         "active_chat_id": active,
         "chats": {cid: chat_to_meta(c) for cid, c in chats.items()},
+        "preferences": {
+            "ui_lang": st.session_state.get("ui_lang"),
+            "ui_theme": st.session_state.get("ui_theme"),
+        },
     }
     _meta_path(user_id).write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -126,6 +163,11 @@ def load_user_state() -> tuple[dict[str, dict], str | None]:
     except (json.JSONDecodeError, OSError):
         return {}, None
     chats = {cid: meta_to_chat(meta) for cid, meta in (payload.get("chats") or {}).items()}
+    prefs = payload.get("preferences") or {}
+    if prefs.get("ui_lang"):
+        st.session_state.ui_lang = prefs["ui_lang"]
+    if prefs.get("ui_theme"):
+        st.session_state.ui_theme = prefs["ui_theme"]
     return chats, payload.get("active_chat_id")
 
 

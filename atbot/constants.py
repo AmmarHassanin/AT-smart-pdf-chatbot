@@ -1,6 +1,6 @@
 from pathlib import Path
 
-ROBOT_IMAGE = Path(__file__).resolve().parent.parent / "assets" / "at-robot.jpg"
+ROBOT_IMAGE = Path(__file__).resolve().parent.parent / "assets" / "Layer 1.png"
 
 MAX_UPLOAD_MB = 200
 
@@ -19,4 +19,11 @@ SUGGESTIONS = [
 SESSION_DEFAULTS = {
     "chats": {},
     "active_chat_id": None,
+    "ui_lang": "en",
+    "ui_theme": "dark",
+    "chat_search": "",
+    "rename_chat_id": None,
+    "pending_delete_id": None,
+    "show_translate_panel": False,
+    "answer_in_progress": False,
 }
