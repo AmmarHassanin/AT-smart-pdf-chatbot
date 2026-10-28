@@ -81,7 +81,7 @@ def render_footer() -> None:
     st.markdown(
         """
 <div class="chat-footer-credit">
-  <a class="dev-footer" href="https://ammar.buad.tech/" target="_blank" rel="noopener noreferrer">Developed by Ammar Yasser</a>
+  <a class="dev-footer" href="https://ammaryasser.dev/" target="_blank" rel="noopener noreferrer">Developed by Ammar Yasser</a>
 </div>
 """,
         unsafe_allow_html=True,
