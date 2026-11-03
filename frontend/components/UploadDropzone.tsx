@@ -48,7 +48,7 @@ export function UploadDropzone({ onFiles }: { onFiles: (files: File[]) => void }
       <motion.div
         animate={dragging ? { y: [-2, 2, -2] } : {}}
         transition={{ duration: 0.8, repeat: Infinity }}
-        className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[var(--gold-border)] bg-gradient-to-br from-[var(--gold-dim)] to-transparent text-[var(--gold)] shadow-[0_0_30px_var(--gold-glow)]"
+        className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[var(--gold-border)] bg-gradient-to-br from-[var(--gold-dim)] to-transparent text-[var(--gold)] shadow-none"
       >
         <UploadCloud size={28} />
       </motion.div>

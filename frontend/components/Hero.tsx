@@ -18,42 +18,15 @@ export function Hero({ onFeatureClick }: { onFeatureClick: (task: string) => voi
   return (
     <div className="mx-auto max-w-6xl px-4 py-14">
       <div className="grid grid-cols-1 items-center gap-14 md:grid-cols-[1fr_1.25fr]">
-        <div className="relative mx-auto flex h-72 w-72 items-center justify-center">
-          <div className="gradient-mesh animate-drift absolute inset-0 rounded-full blur-3xl" />
-
-          {/* orbit rings */}
-          <motion.div
-            className="absolute inset-0 rounded-full border border-dashed border-[var(--gold-border)]/40"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-          />
-          <motion.div
-            className="absolute inset-6 rounded-full border border-[var(--gold-border)]/25"
-            animate={{ rotate: -360 }}
-            transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-          />
-          <motion.div
-            className="absolute h-2.5 w-2.5 rounded-full bg-[var(--gold)] shadow-[0_0_12px_var(--gold)]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-            style={{ top: "0%", left: "50%", transformOrigin: "0 144px" }}
-          />
+        <div className="relative mx-auto flex h-64 w-64 items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-[var(--gold-glow)] opacity-40 blur-3xl" />
 
           <motion.div
-            animate={{ y: [0, -12, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            className="relative flex h-44 w-44 items-center justify-center rounded-[32px] border border-[var(--gold-border)] bg-gradient-to-br from-[#1b1710] via-[var(--card)] to-[var(--elevated)] shadow-premium"
-            style={{ boxShadow: "0 0 80px -10px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.06)" }}
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="relative flex h-40 w-40 items-center justify-center rounded-[28px] border border-[var(--gold-border)] bg-gradient-to-br from-[var(--card)] to-[var(--elevated)] shadow-premium"
           >
-            <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-[var(--gold-dim)] to-transparent opacity-60" />
-            <Bot size={76} className="relative text-[var(--gold)] drop-shadow-[0_0_20px_var(--gold-glow)]" strokeWidth={1.3} />
-            <motion.div
-              className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--gold-border)] bg-[var(--card)]"
-              animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 2.4, repeat: Infinity }}
-            >
-              <Sparkles size={13} className="text-[var(--gold)]" />
-            </motion.div>
+            <Bot size={64} className="relative text-[var(--gold)]" strokeWidth={1.3} />
           </motion.div>
         </div>
 
@@ -63,12 +36,12 @@ export function Hero({ onFeatureClick }: { onFeatureClick: (task: string) => voi
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--gold-border)] bg-[var(--gold-dim)] px-3 py-1 text-xs font-semibold text-[var(--gold)]">
-              <Sparkles size={12} /> AI-powered document intelligence
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-xs font-medium text-[var(--muted)]">
+              <Sparkles size={12} className="text-[var(--gold)]" /> AI-powered document intelligence
             </div>
-            <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight md:text-6xl">
+            <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight md:text-5xl">
               <span className="block">{t("welcome_title")}</span>
-              <span className="text-gradient-gold block">{t("welcome_accent")}</span>
+              <span className="block text-[var(--gold)]">{t("welcome_accent")}</span>
             </h1>
           </motion.div>
           <motion.p
@@ -85,19 +58,18 @@ export function Hero({ onFeatureClick }: { onFeatureClick: (task: string) => voi
               <motion.button
                 key={f.key}
                 onClick={() => onFeatureClick(f.key)}
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 + i * 0.06 }}
-                whileHover={{ y: -3 }}
+                transition={{ duration: 0.35, delay: 0.1 + i * 0.05 }}
+                whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="group relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-gradient-to-br from-[var(--card)] to-[var(--elevated)] p-4 text-start shadow-premium transition-[border-color,box-shadow] duration-300 hover:border-[var(--gold-border)] hover:shadow-[0_12px_32px_-8px_var(--gold-glow)]"
+                className="group rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--card)] p-4 text-start transition-colors duration-200 hover:border-[var(--gold-border)]"
               >
-                <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-[var(--gold-glow)] opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-60" />
-                <div className="relative mb-2.5 flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--gold-border)] bg-gradient-to-br from-[var(--gold-dim)] to-transparent text-[var(--gold)] transition-transform duration-300 group-hover:scale-110">
+                <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--elevated)] text-[var(--gold)] transition-colors duration-200 group-hover:border-[var(--gold-border)]">
                   <f.icon size={18} />
                 </div>
-                <div className="relative text-sm font-bold">{t(f.title)}</div>
-                <div className="relative mt-1 text-xs leading-relaxed text-[var(--muted)]">{t(f.desc)}</div>
+                <div className="text-sm font-bold">{t(f.title)}</div>
+                <div className="mt-1 text-xs leading-relaxed text-[var(--muted)]">{t(f.desc)}</div>
               </motion.button>
             ))}
           </div>
