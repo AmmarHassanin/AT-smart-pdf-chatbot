@@ -24,7 +24,12 @@ export function PdfViewer({ fileUrl, filename }: { fileUrl: string; filename: st
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)]">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--elevated)] px-3 py-2">
-        <span className="truncate text-sm font-semibold">{filename}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-sm font-semibold">{filename}</span>
+          {numPages > 0 && (
+            <span className="badge-success shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold">Indexed</span>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => jumpToPage(Math.max(1, page - 1))}

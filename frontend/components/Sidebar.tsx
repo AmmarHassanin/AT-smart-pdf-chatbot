@@ -121,7 +121,7 @@ export function Sidebar({
                   </button>
                   <button
                     onClick={() => onDelete(chat.id)}
-                    className="rounded-md border border-[var(--border)] bg-[var(--elevated)] p-1.5 text-[var(--muted)] hover:border-red-400/50"
+                    className="btn-danger rounded-md bg-[var(--elevated)] p-1.5"
                   >
                     <Trash2 size={12} />
                   </button>
