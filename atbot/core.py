@@ -11,7 +11,7 @@ from langchain_groq import ChatGroq
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
 
-from atbot.chats import active_chat, maybe_set_title_from_question, touch_chat
+from atbot.chats import active_chat, active_chat_id, maybe_set_title_from_question, touch_chat
 from atbot.constants import MAX_UPLOAD_MB, MODELS
 from atbot.i18n import t
 
@@ -57,17 +57,44 @@ def read_pdf(name: str, data: bytes):
     except Exception:
         return [], 0, t("corrupt_pdf", name=name)
 
-    docs = []
+    docs: list[Document] = []
+    pending: dict[int, Document] = {}
+    empty_pages: list[int] = []
     for number, page in enumerate(reader.pages, start=1):
         try:
             text = (page.extract_text() or "").strip()
         except Exception:
             text = ""
+        doc = Document(page_content=text, metadata={"source": name, "page": number, "ocr": False})
+        pending[number] = doc
         if text:
-            docs.append(Document(page_content=text, metadata={"source": name, "page": number}))
+            docs.append(doc)
+        else:
+            empty_pages.append(number)
+
+    ocr_warning = None
+    if empty_pages:
+        from atbot.ocr import ocr_pdf_pages
+
+        with st.spinner(t("ocr_running")):
+            try:
+                ocr_results = ocr_pdf_pages(data, empty_pages)
+            except Exception:
+                ocr_results = {}
+        for number, text in ocr_results.items():
+            pending[number].page_content = text
+            pending[number].metadata["ocr"] = True
+            docs.append(pending[number])
+        still_empty = len(empty_pages) - len(ocr_results)
+        if ocr_results and still_empty > 0:
+            ocr_warning = t("ocr_partial", name=name, count=still_empty)
+        elif ocr_results:
+            ocr_warning = t("ocr_used", name=name)
+
+    docs.sort(key=lambda d: d.metadata["page"])
     if not docs:
         return [], len(reader.pages), t("no_text_pdf", name=name)
-    return docs, len(reader.pages), None
+    return docs, len(reader.pages), ocr_warning
 
 
 def build_index(files: dict):
@@ -203,16 +230,28 @@ def recent_history(limit: int = 6) -> str:
     return "\n".join(lines)
 
 
-def render_sources(sources) -> None:
+def render_sources(sources, *, cid: str | None = None, key_prefix: str = "") -> None:
     if not sources:
         return
     with st.expander(f"{t('sources')} · {len(sources)}"):
-        for item in sources:
-            st.markdown(
-                f'<div class="source"><b>{item["source"]}</b> · {t("page_label")} {item["page"]}'
-                f'<span>{item["snippet"]}</span></div>',
-                unsafe_allow_html=True,
+        for idx, item in enumerate(sources):
+            page = item.get("page")
+            can_jump = cid is not None and isinstance(page, int)
+            ocr_badge = f' <span class="source__badge">{t("source_ocr_badge")}</span>' if item.get("ocr") else ""
+            source_html = (
+                f'<div class="source"><b>{item["source"]}</b> · {t("page_label")} {item["page"]}{ocr_badge}'
+                f'<span>{item["snippet"]}</span></div>'
             )
+            if can_jump:
+                text_col, btn_col = st.columns([5, 1])
+                with text_col:
+                    st.markdown(source_html, unsafe_allow_html=True)
+                with btn_col:
+                    if st.button("↳", key=f"src_jump_{key_prefix}_{idx}", help=t("go_to_page")):
+                        st.session_state[f"pdf_page_{cid}"] = page
+                        st.rerun()
+            else:
+                st.markdown(source_html, unsafe_allow_html=True)
 
 
 def answer(question: str, model_label: str, k: int) -> None:
@@ -267,10 +306,11 @@ def answer(question: str, model_label: str, k: int) -> None:
                     "source": d.metadata.get("source", "PDF"),
                     "page": d.metadata.get("page", "—"),
                     "snippet": d.page_content[:240].replace("\n", " "),
+                    "ocr": bool(d.metadata.get("ocr")),
                 }
                 for d in docs
             ]
-            render_sources(sources)
+            render_sources(sources, cid=active_chat_id(), key_prefix=f"live_{len(chat['messages'])}")
 
     chat["messages"].append({"role": "assistant", "content": reply, "sources": sources})
     touch_chat(chat)

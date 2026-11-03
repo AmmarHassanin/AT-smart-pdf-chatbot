@@ -451,7 +451,7 @@ def _render_chat_history(chat: dict, cid: str) -> None:
                 if message["role"] == "assistant":
                     sources = message.get("sources")
                     if sources:
-                        render_sources(sources)
+                        render_sources(sources, cid=cid, key_prefix=f"msg_{idx}")
                     ac1, ac2, _ = st.columns([1, 1, 3])
                     with ac1:
                         copy_to_clipboard_button(message["content"], f"copy_{cid}_{idx}")

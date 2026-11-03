@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sse-starlette
+python-dotenv
+langchain-classic
+langchain-community
+langchain-core
+langchain-groq
+langchain-huggingface
+langchain-text-splitters
+sentence-transformers
+faiss-cpu
+pypdf
+deep-translator>=1.11.4
+pymupdf
+rapidocr-onnxruntime

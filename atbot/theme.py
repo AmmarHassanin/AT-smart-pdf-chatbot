@@ -889,6 +889,19 @@ html[dir="rtl"] [data-testid="stChatMessage"]:has([data-testid="stChatMessageAva
 .source { font-size: 0.84rem; padding: 0.55rem 0; border-bottom: 1px solid var(--border); }
 .source:last-child { border-bottom: none; }
 .source span { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 0.2rem; }
+.source__badge {
+  display: inline-block; font-size: 0.65rem; font-weight: 700;
+  color: var(--gold); background: var(--gold-dim); border: 1px solid var(--gold-border);
+  border-radius: 999px; padding: 0.05rem 0.4rem; margin-inline-start: 0.35rem;
+  vertical-align: middle;
+}
+[data-testid="stChatMessage"] [data-testid="stExpander"] [data-testid="stColumn"]:last-child .stButton button {
+  min-height: 1.8rem; padding: 0 0.4rem; font-size: 0.85rem;
+  background: var(--elevated); border: 1px solid var(--border); color: var(--gold);
+}
+[data-testid="stChatMessage"] [data-testid="stExpander"] [data-testid="stColumn"]:last-child .stButton button:hover {
+  border-color: var(--gold-border); box-shadow: 0 0 10px var(--gold-glow);
+}
 
 .stButton button {
   border-radius: var(--radius-md);

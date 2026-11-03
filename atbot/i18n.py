@@ -110,6 +110,11 @@ _STRINGS: dict[str, dict[str, str]] = {
         "corrupt_pdf": "Could not open {name}. Try an unencrypted copy.",
         "no_text_pdf": "{name} has no extractable text (likely scanned images only).",
         "free_plan": "Free Plan",
+        "ocr_running": "Running OCR on scanned pages…",
+        "ocr_used": "{name}: text extracted from scanned pages using OCR.",
+        "ocr_partial": "{name}: OCR could not read {count} scanned page(s).",
+        "source_ocr_badge": "OCR",
+        "go_to_page": "Go to this page in the viewer",
     },
     "ar": {
         "brand": "AT PDF",
@@ -210,6 +215,11 @@ _STRINGS: dict[str, dict[str, str]] = {
         "corrupt_pdf": "تعذّر فتح {name}. جرّب نسخة غير مشفرة.",
         "no_text_pdf": "{name} لا يحتوي نصاً قابلاً للاستخراج (غالباً صور).",
         "free_plan": "الخطة المجانية",
+        "ocr_running": "جاري استخراج النص من الصفحات الممسوحة ضوئيًا…",
+        "ocr_used": "{name}: تم استخراج النص من الصفحات الممسوحة باستخدام OCR.",
+        "ocr_partial": "{name}: تعذّر قراءة {count} صفحة ممسوحة ضوئيًا.",
+        "source_ocr_badge": "OCR",
+        "go_to_page": "روح لهذه الصفحة في العارض",
     },
 }
 
