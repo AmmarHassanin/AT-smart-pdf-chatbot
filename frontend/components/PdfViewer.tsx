@@ -74,7 +74,7 @@ export function PdfViewer({ fileUrl, filename }: { fileUrl: string; filename: st
       </div>
       <div className="flex-1 overflow-auto bg-[#0d0f12] p-3">
         <Document
-          file={{ url: fileUrl, httpHeaders: { "X-User-Id": getUserId() } }}
+          file={{ url: fileUrl, httpHeaders: { "X-User-Id": getUserId() } } as { url: string }}
           onLoadSuccess={({ numPages: n }) => setNumPages(n)}
           loading={<div className="p-6 text-center text-sm text-[var(--muted)]">Loading…</div>}
         >
