@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, ChevronDown, ScanText } from "lucide-react";
+import { ArrowUp, ChevronDown, MessageCircle, ScanText } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useAppStore, type AiMode } from "@/lib/store";
 import * as api from "@/lib/api";
+import { Markdown } from "./Markdown";
 
 const MODES: { key: AiMode; label: string }[] = [
   { key: "chat", label: "tab_chat" },
@@ -132,6 +133,14 @@ export function ChatPanel({
       {mode === "chat" && (
         <>
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pe-1">
+            {messages.length === 0 && (
+              <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--elevated)] text-[var(--gold)]">
+                  <MessageCircle size={18} />
+                </div>
+                <p className="max-w-[220px] text-sm text-[var(--muted)]">{t("empty_chat_hint")}</p>
+              </div>
+            )}
             {messages.map((m, i) => (
               <motion.div
                 key={i}
@@ -147,15 +156,19 @@ export function ChatPanel({
                       : "border border-[var(--border)] bg-[var(--card)]"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">
-                    {m.content || (
-                      <span className="inline-flex gap-1">
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--gold)] [animation-delay:-0.3s]" />
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--gold)] [animation-delay:-0.15s]" />
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--gold)]" />
-                      </span>
-                    )}
-                  </div>
+                  {m.content ? (
+                    m.role === "assistant" ? (
+                      <Markdown>{m.content}</Markdown>
+                    ) : (
+                      <div className="whitespace-pre-wrap">{m.content}</div>
+                    )
+                  ) : (
+                    <span className="inline-flex gap-1 py-0.5">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--gold)] [animation-delay:-0.3s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--gold)] [animation-delay:-0.15s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--gold)]" />
+                    </span>
+                  )}
                   {m.role === "assistant" && <SourceList sources={m.sources} />}
                 </div>
               </motion.div>
@@ -232,8 +245,8 @@ export function ChatPanel({
                 {translating ? "…" : t("translate_run")}
               </button>
               {translateResult && (
-                <div className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-3 text-sm">
-                  {translateResult}
+                <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--card)] p-3">
+                  <Markdown>{translateResult}</Markdown>
                 </div>
               )}
             </>
