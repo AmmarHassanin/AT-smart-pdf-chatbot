@@ -1,4 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// In production (Docker/Coolify) this is left empty so requests go to the
+// same origin as the page, and Next.js's server-side rewrite (next.config.ts)
+// proxies /api/* to the backend container over the internal Docker network.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export function getUserId(): string {
   if (typeof window === "undefined") return "";
