@@ -1,4 +1,7 @@
 services:
+  # Internal-only: no exposed/published port and no EXPOSE in its Dockerfile,
+  # so Coolify has nothing to offer a public domain for on this service.
+  # Only "frontend" below should ever get a domain/FQDN assigned.
   backend:
     build:
       context: .
